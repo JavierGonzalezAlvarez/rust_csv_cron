@@ -3,6 +3,10 @@ use std::collections::HashMap;
 use std::process;
 use std::time::Instant;
 
+//crontab
+use job_scheduler::{Job, JobScheduler};
+//use std::time::Duration;
+
 struct DataCsv {
     pub score: String,
     pub pointaverage: String,
@@ -81,12 +85,24 @@ fn readcsv() -> Result<(), csv::Error> {
 }
 
 fn main() {
-    if let Err(err) = create() {
-        println!("Error: {:?}", err);
-        process::exit(1);
-    }
-    if let Err(err) = readcsv() {
-        println!("Error: {:?}", err);
-        process::exit(1);
+    let mut cron = JobScheduler::new();
+    cron.add(Job::new("0 1/1 * * * *".parse().unwrap(), || {
+        println!("I get executed every 1 minute!");
+        println!("------------------------------");
+        println!("sec   min   hour   day of month   month   day of week   year");
+        println!(" *     *     *        *              *        *           *");
+
+        if let Err(err) = create() {
+            println!("Error: {:?}", err);
+            process::exit(1);
+        }
+        if let Err(err) = readcsv() {
+            println!("Error: {:?}", err);
+            process::exit(1);
+        }
+    }));
+
+    loop {
+        cron.tick();
     }
 }
